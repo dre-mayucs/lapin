@@ -1,0 +1,11 @@
+﻿  main.cpp
+F:\Dev\GitHub\magnet\DXlib1\DXlib1\Initialize_component.h(36,12): warning C4244: '引数': 'time_t' から 'unsigned int' への変換です。データが失われる可能性があります。
+F:\Dev\GitHub\magnet\DXlib1\DXlib1\main.cpp(170,40): warning C4244: '引数': 'double' から 'int' への変換です。データが失われる可能性があります。
+F:\Dev\GitHub\magnet\DXlib1\DXlib1\main.cpp(170,26): warning C4244: '引数': 'double' から 'int' への変換です。データが失われる可能性があります。
+  コード生成しています。
+F:\Dev\GitHub\magnet\DXlib1\DXlib1\main.cpp(321): warning C4715: 'select_obj': 値を返さないコントロール パスがあります。
+  8 of 180 functions ( 4.4%) were compiled, the rest were copied from previous compilation.
+    0 functions were new in current compilation
+    0 functions had inline decision re-evaluated but remain unchanged
+  コード生成が終了しました。
+  DXlib1.vcxproj -> F:\Dev\GitHub\magnet\DXlib1\Release\DXlib1.exe
