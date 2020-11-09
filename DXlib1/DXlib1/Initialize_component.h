@@ -2,19 +2,19 @@
 #include "DxLib.h"
 #include "win_config.h"
 #include "collision.h"
-#include "key.h"
+#include "IO.h"
 #include "color.h"
 #include "using_conponents.h"
+
+#include <iostream>
 #include <ctime>
 #include <cstdlib>
 #include <string>
 #include <fstream>
 #include <sstream>
+#include <vector>
 
-void op();
-void end();
-void stage();
-void start();
+void Start(); 
 
 //Grobal class
 collision Collision;
@@ -40,8 +40,32 @@ int initialize_component()
 int WINAPI WinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance, _In_ LPSTR lpCmdLine, _In_ int nCmdShow)
 {
 	initialize_component();
-	start();
+	Start();
 
 	DxLib_End();
 	return 0;
+}
+
+std::vector<std::string> Split(std::string str, char key)
+{
+	int first = 0;
+	int last = str.find_first_of(key);
+
+	std::vector<std::string> result;
+
+	while (first < str.size())
+	{
+		std::string cache(str, first, last - first);
+		result.push_back(cache);
+
+		first = last + 1;
+		last = str.find_first_of(key, first);
+
+		if (last == std::string::npos)
+		{
+			last = str.size();
+		}
+	}
+
+	return result;
 }

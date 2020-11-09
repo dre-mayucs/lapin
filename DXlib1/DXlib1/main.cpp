@@ -25,10 +25,15 @@ void menu()
 	}
 }
 
+void Character_Move(int pos[]);
 void Start()
 {
 	//character_animation frame
-	short frame = INIT_NUM, frame_cache = INIT_NUM;
+	short *frame = INIT_NUM, frame_cache = INIT_NUM;
+	int character_pos[2] = {
+		250, 250
+	};
+
 	//character_resrouces
 	int character[CHAR_FRAME];
 	LoadDivGraph("Resources\\chr\\char1.png", CHAR_FRAME, CHAR_FRAME, 1, 64, 64, character);
@@ -88,8 +93,16 @@ void Start()
 		DrawGraph(brocks_pos[1][BLOCK_X], brocks_pos[1][BLOCK_Y], nomal_block[INIT_NUM], true);
 		DrawGraph(brocks_pos[2][BLOCK_X], brocks_pos[2][BLOCK_Y], jump_brock[INIT_NUM], true);
 
+		Character_Animation(frame, );
+		DrawGraph(character_pos[0], character_pos[1], character[frame], true);
+
 		ScreenFlip();
 		WaitTimer(20);
 		if (ProcessMessage() == -1 || keys[KEY_INPUT_ESCAPE]) { return; }
 	}
+}
+
+void Character_Move(int pos[])
+{
+	pos[0] += 10;
 }
