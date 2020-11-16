@@ -146,8 +146,23 @@ void stage()
 	int BG_position[2] = { 0, WIN_WIDTH };
 
 	//キャラクター画像/フレーム/フラグ
-	int jump_count = -1;
-	bool brock_flag[3] = { false, false, false };
+	bool world_jump_flag[100][2];
+	for (auto i = 0; i < 2; i++) {
+		world_jump_flag[i][0] = false;
+		world_jump_flag[i][1] = false;
+	}
+	bool brock_flag[3][2] = {
+		{ false, false },
+		{ false, false },
+		{ false, false }
+	};
+
+	bool char_animation_flag[2] = { false, false };
+	int char_animation_frame[2][2];
+	for (auto i = 0; i < 2; i++) {
+		char_animation_frame[i][0] = 0;
+		char_animation_frame[i][1] = 0;
+	}
 
 	int old_block_pos_y = WIN_HEIGHT;
 	int old_user_block_pos_y = WIN_HEIGHT;
@@ -185,63 +200,55 @@ void stage()
 		//画面クリア
 		ClearDrawScreen();
 
-		//背景描画
-		DrawGraph(BG_position[0], 0, Background, true);
-		DrawGraph(BG_position[1], 0, Background, true);
-		
-		//既存ワールドデータ描画
-		for (auto i = 0; i < world_value; i++) {
-			DrawGraph(world_cache[i][BLOCK_X], world_cache[i][BLOCK_Y], nomal_block[INIT_NUM], true); //通常ブロック
-		}
-
-		//ユーザーが置いたブロックの描画
-		DrawGraph(user_brock_pos[0][BLOCK_X], user_brock_pos[0][BLOCK_Y], defoliation_brock[INIT_NUM], true); //落下ブロック
-		DrawGraph(user_brock_pos[1][BLOCK_X], user_brock_pos[1][BLOCK_Y], nomal_block[INIT_NUM], true); //通常ブロック
-		DrawGraph(user_brock_pos[2][BLOCK_X], user_brock_pos[2][BLOCK_Y], jump_brock[INIT_NUM], true); //ジャンプブロック
-
-		//キャラクターアニメーション
-		DrawGraph(character_pos_x, character_pos_y, character[frame], true);
-		if (frame_cache == 3) {
-			frame++;
-			frame_cache = 0;
-		}
-		if (frame == CHAR_FRAME) {
-			frame = 0;
-		}
-		frame_cache++;
-
 		//キャラクタージャンプ処理
 		for (auto i = 0; i < world_value; i++) {
-			if (character_pos_x + 64 > world_cache[i][0] - 10 && jump_count != i && world_cache[i][1] < old_block_pos_y) {
+			if (Collision.box_Fanc(character_pos_x, (double)character_pos_x + 64, character_pos_y, (double)character_pos_y + 64,
+				world_cache[i][0], (double)world_cache[i][0] + 64, world_cache[i][1], (double)world_cache[i][1] + 64)) {
+				world_jump_flag[i][0] = true;
+				char_animation_flag[0] = true;
+			}
+			if (world_jump_flag[i][0] == true && world_jump_flag[i][1] == false) {
 				character_pos_y -= 64;
-				old_block_pos_y = world_cache[i][1];
-				jump_count = i;
-				break;
+				world_jump_flag[i][1] = true;
 			}
 		}
 
 		/// <summary>
-		/// <param number="0">	落下ブロック</param>
-		/// <param number="1">	通常ブロック</param>
-		/// <param number="2">	ジャンプブロック</param>
+		/// <param name="brock_flag[0]"> 落下ブロック	 </param>
+		/// <param name="brock_flag[1]"> 通常ブロック	 </param>
+		/// <param name="brock_flag[2]"> ジャンプブロック</param>
 		/// </summary>
 		for (auto i = 0; i < 3; i++) {
-			if (character_pos_x + 32 == user_brock_pos[i][0] + 32) {
-				brock_flag[i] = true;
-				break;
+			if (Collision.box_Fanc(character_pos_x, (double)character_pos_x, character_pos_y, (double)character_pos_y + 66,
+				user_brock_pos[i][0], (double)user_brock_pos[i][0] + 64, user_brock_pos[i][1], (double)user_brock_pos[i][1] + 64)) {
+				brock_flag[i][0] = true;
 			}
 		}
-		if (brock_flag[0] == true) {
-			if (Collision.box_Fanc(character_pos_x, character_pos_x + 64, character_pos_y, character_pos_y + 64,
-									user_brock_pos[0][0], user_brock_pos[0][0] + 64, user_brock_pos[0][1], user_brock_pos[0][1] + 64)) {
-				brock_flag[0] = false;
-			}
-			else if (character_pos_y == 325) {
-				brock_flag[0] = false;
-			}
-			else {
+
+		if (brock_flag[0][0] == true && brock_flag[0][1] == false) {
+			while (character_pos_y <= 325) {
 				character_pos_y++;
 			}
+			brock_flag[0][1] = true;
+			char_animation_flag[1] = true;
+		}
+
+		if (brock_flag[1][0] == true && brock_flag[1][1] == false) {
+			if (Collision.box_Fanc(character_pos_x, (double)character_pos_x + 64, character_pos_y, (double)character_pos_y + 64,
+				user_brock_pos[1][0], (double)user_brock_pos[1][0] + 64, user_brock_pos[1][1], (double)user_brock_pos[1][1] + 64)) {
+				character_pos_y -= 64;
+				brock_flag[1][1] = true;
+				char_animation_flag[0] = true;
+			}
+			else {
+				brock_flag[1][1] = true;
+			}
+		}
+
+		if (brock_flag[2][0] == true && brock_flag[2][1] == false) {
+			character_pos_y -= 128;
+			brock_flag[2][1] = true;
+			char_animation_flag[0] = true;
 		}
 
 		//背景座標更新処理
@@ -262,6 +269,57 @@ void stage()
 			for (auto brock_x = 0; brock_x < 3; brock_x++) {
 				user_brock_pos[brock_x][0]--;
 			}
+		}
+
+		//背景描画
+		DrawGraph(BG_position[0], 0, Background, true);
+		DrawGraph(BG_position[1], 0, Background, true);
+		
+		//既存ワールドデータ描画
+		for (auto i = 0; i < world_value; i++) {
+			DrawGraph(world_cache[i][BLOCK_X], world_cache[i][BLOCK_Y], nomal_block[INIT_NUM], true); //通常ブロック
+		}
+
+		//ユーザーが置いたブロックの描画
+		DrawGraph(user_brock_pos[0][BLOCK_X], user_brock_pos[0][BLOCK_Y], defoliation_brock[INIT_NUM], true); //落下ブロック
+		DrawGraph(user_brock_pos[1][BLOCK_X], user_brock_pos[1][BLOCK_Y], nomal_block[INIT_NUM], true); //通常ブロック
+		DrawGraph(user_brock_pos[2][BLOCK_X], user_brock_pos[2][BLOCK_Y], jump_brock[INIT_NUM], true); //ジャンプブロック
+
+		//キャラクターアニメーション
+		if (char_animation_flag[0]) {
+			DrawGraph(character_pos_x, character_pos_y, character_jump[char_animation_frame[0][1]], true);
+			if (char_animation_frame[0][0] == 3) {
+				char_animation_frame[0][1]++;
+				char_animation_frame[0][0] = 0;
+			}
+			if (char_animation_frame[0][1] == 8) {
+				char_animation_frame[0][1] = 0;
+				char_animation_flag[0] = false;
+			}
+			char_animation_frame[0][0]++;
+		}
+		else if (char_animation_flag[1]) {
+			DrawGraph(character_pos_x, character_pos_y, character_fall[char_animation_frame[1][1]], true);
+			if (char_animation_frame[1][0] == 3) {
+				char_animation_frame[1][1]++;
+				char_animation_frame[1][0] = 0;
+			}
+			if (char_animation_frame[1][1] == 8) {
+				char_animation_frame[1][1] = 0;
+				char_animation_flag[1] = false;
+			}
+			char_animation_frame[1][0]++;
+		}
+		else {
+			DrawGraph(character_pos_x, character_pos_y, character[frame], true);
+			if (frame_cache == 3) {
+				frame++;
+				frame_cache = 0;
+			}
+			if (frame == CHAR_FRAME) {
+				frame = 0;
+			}
+			frame_cache++;
 		}
 
 		ScreenFlip();
