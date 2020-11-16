@@ -77,15 +77,15 @@ std::vector<std::string> Split(std::string str, char key)
 }
 
 int world_value = 0;
-int world[20][2];
+int world[100][2];
 void World_inport()
 {
 	int count = 0;
 	int count2 = 0;
-	std::string w_cache, cache[4], cache_2[20];
+	std::string w_cache, cache[4], cache_2[100];
 	std::ifstream stream_File("Resources\\scenes\\stage.scene");
 
-	for (auto i = 0; i < 20; i++) {
+	for (auto i = 0; i < 100; i++) {
 		world[i][0] = 0;
 		world[i][1] = 0;
 	}

@@ -127,9 +127,9 @@ void Start()
 void stage()
 {
 	//ワールドデータ複製
-	int world_cache[20][2];
+	int world_cache[100][2];
 	int user_brock_pos[3][2];
-	for (auto i = 0; i < 20; i++) {
+	for (auto i = 0; i < 100; i++) {
 		for (auto j = 0; j < 2; j++) {
 			//ワールド読み込み時の座標の複製
 			world_cache[i][j] = world[i][j];
@@ -146,8 +146,11 @@ void stage()
 	int BG_position[2] = { 0, WIN_WIDTH };
 
 	//キャラクター画像/フレーム/フラグ
-	bool jump_flag = false;
+	int jump_count = -1;
+	int old_block_pos_y = WIN_HEIGHT;
+	int old_user_block_pos_y = WIN_HEIGHT;
 	short frame = INIT_NUM, frame_cache = INIT_NUM;
+	int character_pos_x = 100;
 	int character_pos_y = 325;
 	int character[CHAR_FRAME];
 	int character_jump[8];
@@ -194,7 +197,7 @@ void stage()
 		DrawGraph(user_brock_pos[2][BLOCK_X], user_brock_pos[2][BLOCK_Y], jump_brock[INIT_NUM], true); //ジャンプブロック
 
 		//キャラクターアニメーション
-		DrawGraph(100, character_pos_y, character[frame], true);
+		DrawGraph(character_pos_x, character_pos_y, character[frame], true);
 		if (frame_cache == 3) {
 			frame++;
 			frame_cache = 0;
@@ -204,11 +207,19 @@ void stage()
 		}
 		frame_cache++;
 
-		for (auto i = 0; i < 20; i++) {
-
-			if (character_pos_y >= world_cache[i][0] - 10 && jump_flag == false) {
-				jump_flag = true;
+		//キャラクタージャンプ処理
+		for (auto i = 0; i < world_value; i++) {
+			if (character_pos_x + 64 > world_cache[i][0] - 10 && jump_count != i && world_cache[i][1] < old_block_pos_y) {
 				character_pos_y -= 64;
+				old_block_pos_y = world_cache[i][1];
+				jump_count = i;
+				break;
+			}
+		}
+
+		for (auto i = 0; i < 3; i++) {
+			if (character_pos_x + 64 > user_brock_pos[i][0] - 10 && jump_count != i && user_brock_pos[i][1] < old_user_block_pos_y) {
+
 			}
 		}
 
@@ -224,7 +235,7 @@ void stage()
 			BG_position[0]--;
 			BG_position[1]--;
 
-			for (auto brock_x = 0; brock_x < 20; brock_x++) {
+			for (auto brock_x = 0; brock_x < world_value; brock_x++) {
 				world_cache[brock_x][0]--;
 			}
 			for (auto brock_x = 0; brock_x < 3; brock_x++) {
