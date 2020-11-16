@@ -147,11 +147,14 @@ void stage()
 
 	//キャラクター画像/フレーム/フラグ
 	int jump_count = -1;
+	bool brock_flag[3] = { false, false, false };
+
 	int old_block_pos_y = WIN_HEIGHT;
 	int old_user_block_pos_y = WIN_HEIGHT;
 	short frame = INIT_NUM, frame_cache = INIT_NUM;
 	int character_pos_x = 100;
 	int character_pos_y = 325;
+
 	int character[CHAR_FRAME];
 	int character_jump[8];
 	int character_fall[8];
@@ -217,9 +220,27 @@ void stage()
 			}
 		}
 
+		/// <summary>
+		/// <param number="0">	落下ブロック</param>
+		/// <param number="1">	通常ブロック</param>
+		/// <param number="2">	ジャンプブロック</param>
+		/// </summary>
 		for (auto i = 0; i < 3; i++) {
-			if (character_pos_x + 64 > user_brock_pos[i][0] - 10 && jump_count != i && user_brock_pos[i][1] < old_user_block_pos_y) {
-
+			if (character_pos_x + 32 == user_brock_pos[i][0] + 32) {
+				brock_flag[i] = true;
+				break;
+			}
+		}
+		if (brock_flag[0] == true) {
+			if (Collision.box_Fanc(character_pos_x, character_pos_x + 64, character_pos_y, character_pos_y + 64,
+									user_brock_pos[0][0], user_brock_pos[0][0] + 64, user_brock_pos[0][1], user_brock_pos[0][1] + 64)) {
+				brock_flag[0] = false;
+			}
+			else if (character_pos_y == 325) {
+				brock_flag[0] = false;
+			}
+			else {
+				character_pos_y++;
 			}
 		}
 
