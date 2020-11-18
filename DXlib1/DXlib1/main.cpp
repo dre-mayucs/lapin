@@ -43,6 +43,7 @@ void Start()
 	//Load World
 	World_inport();
 
+	#pragma region 変数宣言/定義
 	//background_images
 	int BG_X[2] = { INIT_NUM,WIN_WIDTH };
 	int BG = LoadGraph("Resources\\Background\\background.png");
@@ -67,8 +68,10 @@ void Start()
 
 	int arrowWidth = 32;//z
 	int arrowHeight = 64;//z
+	#pragma endregion
 
 	while (true) {
+		#pragma region 初期化
 		//キー情報取得
 		for (auto i = 0; i < 256; i++) { oldkeys[i] = keys[i]; }
 		GetHitKeyStateAll(keys);
@@ -83,7 +86,9 @@ void Start()
 
 		//画面クリア
 		ClearDrawScreen();
+		#pragma endregion
 
+		#pragma region マウス当たり判定
 		//ブロック同士の当たり判定
 		if (Mouse == MOUSE_INPUT_LEFT && collision_defoliation_mouse() == true) {
 			collision_block_otherblock(&Mouse_X, &Mouse_Y, blocks_tmp, 0);
@@ -94,7 +99,9 @@ void Start()
 		else if (Mouse == MOUSE_INPUT_LEFT && collision_jump_mouse() == true) {
 			collision_block_otherblock(&Mouse_X, &Mouse_Y, blocks_tmp, 2);
 		}
+		#pragma endregion
 
+		#pragma region 描画処理
 		//背景描画
 		DrawGraph(BG_X[0], 0, BG, TRUE);//z
 		DrawGraph(BG_X[1], 0, BG, TRUE);//z
@@ -113,7 +120,9 @@ void Start()
 		DrawGraph(brocks_pos[0][BLOCK_X], brocks_pos[0][BLOCK_Y], defoliation_brock[INIT_NUM], true); //落下ブロック
 		DrawGraph(brocks_pos[1][BLOCK_X], brocks_pos[1][BLOCK_Y], nomal_block[INIT_NUM], true); //通常ブロック
 		DrawGraph(brocks_pos[2][BLOCK_X], brocks_pos[2][BLOCK_Y], jump_brock[INIT_NUM], true); //ジャンプブロック
+		#pragma endregion
 
+		#pragma region フレーム終了処理
 		ScreenFlip();
 		WaitTimer(20);
 		if (ProcessMessage() == -1 || keys[KEY_INPUT_ESCAPE]) { return; }
@@ -121,11 +130,13 @@ void Start()
 		if (click) {
 			return;
 		}
+		#pragma endregion
 	}
 }
 
 void stage()
 {
+	#pragma region 変数宣言/定義
 	//ワールドデータ複製
 	int world_cache[100][2];
 	int user_brock_pos[3][2];
@@ -184,9 +195,11 @@ void stage()
 	LoadDivGraph("Resources\\Object\\defoliation-Sheet.png", DEFOLIATION_NUM, DEFOLIATION_NUM, 1, BLOCK_SIZE, BLOCK_SIZE, defoliation_brock);
 	LoadDivGraph("Resources\\Object\\jump-Sheet.png", JUMP_NUM, JUMP_NUM, 1, BLOCK_SIZE, BLOCK_SIZE, jump_brock);
 	LoadDivGraph("Resources\\Object\\block.png", NOMAL_NUM, NOMAL_NUM, 1, BLOCK_SIZE, BLOCK_SIZE, nomal_block);
+	#pragma endregion
 
 	while (true)
 	{
+		#pragma region 初期化処理
 		//キー情報取得
 		for (auto i = 0; i < 256; i++) { oldkeys[i] = keys[i]; }
 		GetHitKeyStateAll(keys);
@@ -199,7 +212,9 @@ void stage()
 
 		//画面クリア
 		ClearDrawScreen();
+		#pragma endregion
 
+		#pragma region キャラクター処理
 		//キャラクタージャンプ処理
 		for (auto i = 0; i < world_value; i++) {
 			if (Collision.box_Fanc(character_pos_x, (double)character_pos_x + 64, character_pos_y, (double)character_pos_y + 64,
@@ -212,19 +227,23 @@ void stage()
 				world_jump_flag[i][1] = true;
 			}
 		}
+		#pragma endregion
 
+		#pragma region ユーザー定義ブロック判定
 		/// <summary>
 		/// <param name="brock_flag[0]"> 落下ブロック	 </param>
 		/// <param name="brock_flag[1]"> 通常ブロック	 </param>
 		/// <param name="brock_flag[2]"> ジャンプブロック</param>
 		/// </summary>
+		//当たり判定
 		for (auto i = 0; i < 3; i++) {
-			if (Collision.box_Fanc(character_pos_x, (double)character_pos_x, character_pos_y, (double)character_pos_y + 66,
+			if (Collision.box_Fanc(character_pos_x, (double)character_pos_x + 64, character_pos_y, (double)character_pos_y + 64,
 				user_brock_pos[i][0], (double)user_brock_pos[i][0] + 64, user_brock_pos[i][1], (double)user_brock_pos[i][1] + 64)) {
 				brock_flag[i][0] = true;
 			}
 		}
 
+		//落下ブロック機能
 		if (brock_flag[0][0] == true && brock_flag[0][1] == false) {
 			while (character_pos_y <= 325) {
 				character_pos_y++;
@@ -233,24 +252,22 @@ void stage()
 			char_animation_flag[1] = true;
 		}
 
+		//通常ブロック機能
 		if (brock_flag[1][0] == true && brock_flag[1][1] == false) {
-			if (Collision.box_Fanc(character_pos_x, (double)character_pos_x + 64, character_pos_y, (double)character_pos_y + 64,
-				user_brock_pos[1][0], (double)user_brock_pos[1][0] + 64, user_brock_pos[1][1], (double)user_brock_pos[1][1] + 64)) {
-				character_pos_y -= 64;
-				brock_flag[1][1] = true;
-				char_animation_flag[0] = true;
-			}
-			else {
-				brock_flag[1][1] = true;
-			}
+			character_pos_y -= 64;
+			brock_flag[1][1] = true;
+			char_animation_flag[0] = true;
 		}
 
+		//ジャンプブロック機能
 		if (brock_flag[2][0] == true && brock_flag[2][1] == false) {
 			character_pos_y -= 128;
 			brock_flag[2][1] = true;
 			char_animation_flag[0] = true;
 		}
+		#pragma endregion
 
+		#pragma region 背景処理
 		//背景座標更新処理
 		for (auto i = 0; i < 2; i++) {
 			if (BG_position[0] == -WIN_WIDTH) {
@@ -274,7 +291,7 @@ void stage()
 		//背景描画
 		DrawGraph(BG_position[0], 0, Background, true);
 		DrawGraph(BG_position[1], 0, Background, true);
-		
+
 		//既存ワールドデータ描画
 		for (auto i = 0; i < world_value; i++) {
 			DrawGraph(world_cache[i][BLOCK_X], world_cache[i][BLOCK_Y], nomal_block[INIT_NUM], true); //通常ブロック
@@ -284,8 +301,9 @@ void stage()
 		DrawGraph(user_brock_pos[0][BLOCK_X], user_brock_pos[0][BLOCK_Y], defoliation_brock[INIT_NUM], true); //落下ブロック
 		DrawGraph(user_brock_pos[1][BLOCK_X], user_brock_pos[1][BLOCK_Y], nomal_block[INIT_NUM], true); //通常ブロック
 		DrawGraph(user_brock_pos[2][BLOCK_X], user_brock_pos[2][BLOCK_Y], jump_brock[INIT_NUM], true); //ジャンプブロック
+		#pragma endregion
 
-		//キャラクターアニメーション
+		#pragma region キャラクターアニメーション
 		if (char_animation_flag[0]) {
 			DrawGraph(character_pos_x, character_pos_y, character_jump[char_animation_frame[0][1]], true);
 			if (char_animation_frame[0][0] == 3) {
@@ -321,10 +339,13 @@ void stage()
 			}
 			frame_cache++;
 		}
+		#pragma endregion
 
+		#pragma region フレーム終了処理
 		ScreenFlip();
 		WaitTimer(20);
 		if (ProcessMessage() == -1 || keys[KEY_INPUT_ESCAPE]) { return; }
+		#pragma endregion
 	}
 }
 
