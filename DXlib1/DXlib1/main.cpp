@@ -109,14 +109,16 @@ void Start()
 
 		#pragma region オブジェクト当たり判定
 		//ブロック同士の当たり判定
-		if (Mouse == MOUSE_INPUT_LEFT && collision_defoliation_mouse() == true) {
-			collision_block_otherblock(&Mouse_X, &Mouse_Y, blocks_tmp, 0);
-		}
-		else if (Mouse == MOUSE_INPUT_LEFT && collision_normal_mouse() == true) {
-			collision_block_otherblock(&Mouse_X, &Mouse_Y, blocks_tmp, 1);
-		}
-		else if (Mouse == MOUSE_INPUT_LEFT && collision_jump_mouse() == true) {
-			collision_block_otherblock(&Mouse_X, &Mouse_Y, blocks_tmp, 2);
+		if (Mouse == MOUSE_INPUT_LEFT) {
+			if (collision_defoliation_mouse() == true) {
+				collision_block_otherblock(&Mouse_X, &Mouse_Y, blocks_tmp, 0);
+			}
+			else if (collision_normal_mouse() == true) {
+				collision_block_otherblock(&Mouse_X, &Mouse_Y, blocks_tmp, 1);
+			}
+			else if (collision_jump_mouse() == true) {
+				collision_block_otherblock(&Mouse_X, &Mouse_Y, blocks_tmp, 2);
+			}
 		}
 		#pragma endregion
 
@@ -136,9 +138,30 @@ void Start()
 		DrawTurnGraph(192, WIN_HEIGHT / 2 - arrowHeight / 2, scrollArrow, TRUE);//後退//z
 
 		//ブロック描画
-		DrawGraph(brocks_pos[0][BLOCK_X] + World_adjust, brocks_pos[0][BLOCK_Y], defoliation_brock[INIT_NUM], true); //落下ブロック
-		DrawGraph(brocks_pos[1][BLOCK_X] + World_adjust, brocks_pos[1][BLOCK_Y], nomal_block[INIT_NUM], true); //通常ブロック
-		DrawGraph(brocks_pos[2][BLOCK_X] + World_adjust, brocks_pos[2][BLOCK_Y], jump_brock[INIT_NUM], true); //ジャンプブロック
+		for (auto i = 0; i < 3; i++) {
+			if (brocks_pos[i][BLOCK_X] == 10) {
+				if (i == 0) {
+					DrawGraph(brocks_pos[0][BLOCK_X], brocks_pos[0][BLOCK_Y], defoliation_brock[INIT_NUM], true); //落下ブロック
+				}
+				else if (i == 1) {
+					DrawGraph(brocks_pos[1][BLOCK_X], brocks_pos[1][BLOCK_Y], nomal_block[INIT_NUM], true); //通常ブロック
+				}
+				else {
+					DrawGraph(brocks_pos[2][BLOCK_X], brocks_pos[2][BLOCK_Y], jump_brock[INIT_NUM], true); //ジャンプブロック
+				}
+			}
+			else {
+				if (i == 0) {
+					DrawGraph(brocks_pos[0][BLOCK_X] + World_adjust, brocks_pos[0][BLOCK_Y], defoliation_brock[INIT_NUM], true); //落下ブロック
+				}
+				else if (i == 1) {
+					DrawGraph(brocks_pos[1][BLOCK_X] + World_adjust, brocks_pos[1][BLOCK_Y], nomal_block[INIT_NUM], true); //通常ブロック
+				}
+				else {
+					DrawGraph(brocks_pos[2][BLOCK_X] + World_adjust, brocks_pos[2][BLOCK_Y], jump_brock[INIT_NUM], true); //ジャンプブロック
+				}
+			}
+		}
 		#pragma endregion
 
 		#pragma region フレーム終了処理
@@ -179,6 +202,7 @@ void stage()
 	int BG_position[2] = { 0, WIN_WIDTH };
 
 	//キャラクター画像/フレーム/フラグ
+	bool brock_collision_flag[2] = {false, false};
 	bool world_jump_flag[100][2];
 	for (auto i = 0; i < 2; i++) {
 		world_jump_flag[i][0] = false;
@@ -243,10 +267,14 @@ void stage()
 				world_cache[i][0], (double)world_cache[i][0] + 64, world_cache[i][1], (double)world_cache[i][1] + 64)) {
 				world_jump_flag[i][0] = true;
 				char_animation_flag[0] = true;
+				brock_collision_flag[0] = true;
 			}
-			else if(character_pos_y <= 325) {
-				character_pos_y++;
+			else if (character_pos_x >= world_cache[i][0] && character_pos_x <= world_cache[i][0] + 64 || 
+					 character_pos_x + 64 >= world_cache[i][0] && character_pos_x + 64 <= world_cache[i][0] + 64 && 
+					 character_pos_y >= world_cache[i][1]){
+				brock_collision_flag[0] = true;
 			}
+			else { brock_collision_flag[0] = false; }
 
 			if (world_jump_flag[i][0] == true && world_jump_flag[i][1] == false) {
 				character_pos_y -= 64;
@@ -263,9 +291,28 @@ void stage()
 		/// </summary>
 		//当たり判定
 		for (auto i = 0; i < 3; i++) {
-			if (Collision.box_Fanc(character_pos_x, (double)character_pos_x + 64, character_pos_y, (double)character_pos_y + 64,
-				user_brock_pos[i][0], (double)user_brock_pos[i][0] + 64, user_brock_pos[i][1], (double)user_brock_pos[i][1] + 64)) {
+			bool b_collision_rear =
+				Collision.box_Fanc(character_pos_x, (double)character_pos_x, character_pos_y, (double)character_pos_y + 64,
+					user_brock_pos[i][0], (double)user_brock_pos[i][0] + 64, user_brock_pos[i][1], (double)user_brock_pos[i][1] + 64);
+
+			bool b_collision_front =
+				Collision.box_Fanc(character_pos_x, (double)character_pos_x + 64, character_pos_y, (double)character_pos_y + 64,
+					user_brock_pos[i][0], (double)user_brock_pos[i][0] + 64, user_brock_pos[i][1], (double)user_brock_pos[i][1] + 64);
+
+			if (i == 1 && b_collision_front) {
 				brock_flag[i][0] = true;
+				brock_collision_flag[1] = true;
+			}
+			else if (b_collision_rear) {
+				brock_flag[i][0] = true;
+				brock_collision_flag[1] = true;
+			}
+			else { brock_collision_flag[1] = false; }
+		}
+
+		if (brock_collision_flag[0] == false && brock_collision_flag[1] == false) {
+			if (character_pos_y <= 325) {
+				character_pos_y++;
 			}
 		}
 
