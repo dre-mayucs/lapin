@@ -24,7 +24,7 @@ collision Collision;
 Effects effect;
 
 //Prototype
-void BG_scroll(int *BgX, const int &mouseX, const int &mouseY);
+void BG_scroll(int *BgX, int *adjust, const int &mouseX, const int &mouseY);
 
 int collision_block_otherblock(int *mouse_x, int *mouse_y, const int(*pos_tmp)[BLOCK_TYPE_NUM], int num);
 

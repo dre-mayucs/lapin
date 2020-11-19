@@ -9,7 +9,14 @@ int brocks_pos[][BLOCK_TYPE_NUM] =
 
 void menu()
 {
-	int Background = LoadGraph("Resources\\Background\\title.png", true);
+	int frame = 0;
+	int cache_frame = 0;
+	const int Max_frame = 34;
+	const int adjust_frame = 8;
+
+	int Background = LoadGraph("Resources\\Background\\background.png", true);
+	int Mask_image[Max_frame];
+	LoadDivGraph("Resources\\Background\\animation_title.png", 34, 34, 1, 800, 450, Mask_image);
 
 	while (true)
 	{
@@ -26,10 +33,19 @@ void menu()
 		//画面クリア
 		ClearDrawScreen();
 
-		DrawGraph(0, 0, Background, true);
-		if (click) {
-			return;
+		DrawGraph(0, 0, Background, false);
+		DrawGraph(0, 0, Mask_image[frame], true);
+
+		if (frame == Max_frame - 1) {
+			frame = 0;
 		}
+		if (cache_frame == adjust_frame) {
+			frame++;
+			cache_frame = 0;
+		}
+		cache_frame++;
+
+		if (click) { return; }
 
 		ScreenFlip();
 		WaitTimer(20);
@@ -44,6 +60,8 @@ void Start()
 	World_inport();
 
 	#pragma region 変数宣言/定義
+	int World_adjust = 0;
+
 	//background_images
 	int BG_X[2] = { INIT_NUM,WIN_WIDTH };
 	int BG = LoadGraph("Resources\\Background\\background.png");
@@ -82,13 +100,14 @@ void Start()
 		Mouse = GetMouseInput();
 		GetMousePoint(&Mouse_X, &Mouse_Y);
 
-		BG_scroll(BG_X, Mouse_X, Mouse_Y);//z
-
 		//画面クリア
 		ClearDrawScreen();
 		#pragma endregion
 
-		#pragma region マウス当たり判定
+		//背景スクロール
+		BG_scroll(BG_X, &World_adjust, Mouse_X, Mouse_Y);//z
+
+		#pragma region オブジェクト当たり判定
 		//ブロック同士の当たり判定
 		if (Mouse == MOUSE_INPUT_LEFT && collision_defoliation_mouse() == true) {
 			collision_block_otherblock(&Mouse_X, &Mouse_Y, blocks_tmp, 0);
@@ -108,7 +127,7 @@ void Start()
 
 		//既存ワールドデータ描画
 		for (auto i = 0; i < world_value; i++) {
-			DrawGraph(world[i][BLOCK_X], world[i][BLOCK_Y], nomal_block[INIT_NUM], true); //通常ブロック
+			DrawGraph(world[i][BLOCK_X] + World_adjust, world[i][BLOCK_Y], nomal_block[INIT_NUM], true); //通常ブロック
 		}
 
 		//インターフェース描画
@@ -117,9 +136,9 @@ void Start()
 		DrawTurnGraph(192, WIN_HEIGHT / 2 - arrowHeight / 2, scrollArrow, TRUE);//後退//z
 
 		//ブロック描画
-		DrawGraph(brocks_pos[0][BLOCK_X], brocks_pos[0][BLOCK_Y], defoliation_brock[INIT_NUM], true); //落下ブロック
-		DrawGraph(brocks_pos[1][BLOCK_X], brocks_pos[1][BLOCK_Y], nomal_block[INIT_NUM], true); //通常ブロック
-		DrawGraph(brocks_pos[2][BLOCK_X], brocks_pos[2][BLOCK_Y], jump_brock[INIT_NUM], true); //ジャンプブロック
+		DrawGraph(brocks_pos[0][BLOCK_X] + World_adjust, brocks_pos[0][BLOCK_Y], defoliation_brock[INIT_NUM], true); //落下ブロック
+		DrawGraph(brocks_pos[1][BLOCK_X] + World_adjust, brocks_pos[1][BLOCK_Y], nomal_block[INIT_NUM], true); //通常ブロック
+		DrawGraph(brocks_pos[2][BLOCK_X] + World_adjust, brocks_pos[2][BLOCK_Y], jump_brock[INIT_NUM], true); //ジャンプブロック
 		#pragma endregion
 
 		#pragma region フレーム終了処理
@@ -128,7 +147,10 @@ void Start()
 		if (ProcessMessage() == -1 || keys[KEY_INPUT_ESCAPE]) { return; }
 
 		if (click) {
-			return;
+			for (auto i = 0; i < 3; i++) {
+				brocks_pos[i][0] += World_adjust;
+			}
+			break;
 		}
 		#pragma endregion
 	}
@@ -222,6 +244,10 @@ void stage()
 				world_jump_flag[i][0] = true;
 				char_animation_flag[0] = true;
 			}
+			else if(character_pos_y <= 325) {
+				character_pos_y++;
+			}
+
 			if (world_jump_flag[i][0] == true && world_jump_flag[i][1] == false) {
 				character_pos_y -= 64;
 				world_jump_flag[i][1] = true;
@@ -351,7 +377,7 @@ void stage()
 
 #pragma region utility_fanction
 //背景のスクロール
-void BG_scroll(int *BgX, const int &mouseX, const int &mouseY)//z
+void BG_scroll(int *BgX, int *adjust, const int &mouseX, const int &mouseY)//z
 {
 	bool keyLeftInput = (GetMouseInput() & MOUSE_INPUT_LEFT) != 0 && oldMouse == !(GetMouseInput() & MOUSE_INPUT_LEFT);
 	bool scrollLeftFlag = mouseX > 192 && mouseX < 192 + 32 && mouseY > WIN_HEIGHT / 2 - 32 && mouseY < WIN_HEIGHT / 2 + 32;
@@ -363,11 +389,13 @@ void BG_scroll(int *BgX, const int &mouseX, const int &mouseY)//z
 	{
 		BgX[0] -= scrollVel;
 		BgX[1] -= scrollVel;
+		*adjust -= scrollVel;
 	}
 	if (scrollLeftFlag && keyLeftInput)
 	{
 		BgX[0] += scrollVel;
 		BgX[1] += scrollVel;
+		*adjust += scrollVel;
 	}
 	for (int i = 0; i < 2; ++i)
 	{
