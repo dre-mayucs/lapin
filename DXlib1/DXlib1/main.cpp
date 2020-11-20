@@ -77,6 +77,15 @@ void Start()
 	//UI_images
 	int UI = LoadGraph("Resources\\UI\\bar.png");
 	int scrollArrow = LoadGraph("Resources\\UI\\scroll.png");//z
+	bool start_button_flag = false;
+	int UI_Button[2] = {
+		LoadGraph("Resources\\UI\\start1.png"),
+		LoadGraph("Resources\\UI\\stop1.png")
+	};
+	int UI_Button_pos[2][2] = {
+		{25, 300},
+		{100, 300}
+	};
 
 	int blocks_tmp[BLOCK_TYPE_NUM][BLOCK_TYPE_NUM];
 	for (int i = INIT_NUM; i < BLOCK_TYPE_NUM; i++) {
@@ -137,6 +146,22 @@ void Start()
 		DrawGraph(WIN_WIDTH - arrowWidth, WIN_HEIGHT / 2 - arrowHeight / 2, scrollArrow, TRUE);//前進//z
 		DrawTurnGraph(192, WIN_HEIGHT / 2 - arrowHeight / 2, scrollArrow, TRUE);//後退//z
 
+		//再生/停止ボタン描画_当たり判定処理
+		for (auto i = 0; i < 2; i++){
+			//当たり判定
+			bool *collision_start = new bool(Collision.Trigonometric_Fanc(UI_Button_pos[i][0], UI_Button_pos[i][1], 32, Mouse_X, Mouse_Y, 32));
+			//描画処理
+			DrawGraph(UI_Button_pos[i][0], UI_Button_pos[i][1], UI_Button[i], true);
+
+			//マウスが再生ボタンを押した場合ゲームスタート
+			if (i == 0 && *collision_start == true) {
+				if (Mouse != MOUSE_INPUT_LEFT && oldMouse == MOUSE_INPUT_LEFT) {
+					start_button_flag = true;
+				}
+			}
+			delete collision_start;
+		}
+
 		//ブロック描画
 		for (auto i = 0; i < 3; i++) {
 			if (brocks_pos[i][BLOCK_X] == 10) {
@@ -165,16 +190,16 @@ void Start()
 		#pragma endregion
 
 		#pragma region フレーム終了処理
-		ScreenFlip();
-		WaitTimer(20);
-		if (ProcessMessage() == -1 || keys[KEY_INPUT_ESCAPE]) { return; }
-
-		if (click) {
+		if(start_button_flag == true) {
 			for (auto i = 0; i < 3; i++) {
 				brocks_pos[i][0] += World_adjust;
 			}
 			break;
 		}
+
+		ScreenFlip();
+		WaitTimer(20);
+		if (ProcessMessage() == -1 || keys[KEY_INPUT_ESCAPE]) { return; }
 		#pragma endregion
 	}
 }
@@ -263,18 +288,21 @@ void stage()
 		#pragma region キャラクター処理
 		//キャラクタージャンプ処理
 		for (auto i = 0; i < world_value; i++) {
-			if (Collision.box_Fanc(character_pos_x, (double)character_pos_x + 64, character_pos_y, (double)character_pos_y + 64,
-				world_cache[i][0], (double)world_cache[i][0] + 64, world_cache[i][1], (double)world_cache[i][1] + 64)) {
+			bool char_collision =
+				Collision.box_Fanc(character_pos_x, (double)character_pos_x + 64, character_pos_y, (double)character_pos_y + 65,
+					world_cache[i][0], (double)world_cache[i][0] + 64, world_cache[i][1], (double)world_cache[i][1] + 64);
+
+			if (char_collision) {
 				world_jump_flag[i][0] = true;
 				char_animation_flag[0] = true;
 				brock_collision_flag[0] = true;
 			}
-			else if (character_pos_x >= world_cache[i][0] && character_pos_x <= world_cache[i][0] + 64 || 
-					 character_pos_x + 64 >= world_cache[i][0] && character_pos_x + 64 <= world_cache[i][0] + 64 && 
-					 character_pos_y >= world_cache[i][1]){
-				brock_collision_flag[0] = true;
+			else {
+				while (true) {
+					if (character_pos_y == 325 || char_collision || char_animation_flag[0] == true) { break; }
+					else { character_pos_y++; }
+				}
 			}
-			else { brock_collision_flag[0] = false; }
 
 			if (world_jump_flag[i][0] == true && world_jump_flag[i][1] == false) {
 				character_pos_y -= 64;
@@ -308,12 +336,6 @@ void stage()
 				brock_collision_flag[1] = true;
 			}
 			else { brock_collision_flag[1] = false; }
-		}
-
-		if (brock_collision_flag[0] == false && brock_collision_flag[1] == false) {
-			if (character_pos_y <= 325) {
-				character_pos_y++;
-			}
 		}
 
 		//落下ブロック機能
