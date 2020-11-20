@@ -227,6 +227,7 @@ void stage()
 	int BG_position[2] = { 0, WIN_WIDTH };
 
 	//キャラクター画像/フレーム/フラグ
+	bool gravity_flag = false;
 	bool brock_collision_flag[2] = {false, false};
 	bool world_jump_flag[100][2];
 	for (auto i = 0; i < 2; i++) {
@@ -288,8 +289,12 @@ void stage()
 		#pragma region キャラクター処理
 		//キャラクタージャンプ処理
 		for (auto i = 0; i < world_value; i++) {
+			bool char_collision_adjust =
+				Collision.box_Fanc(character_pos_x , (double)character_pos_x + 1, (double)character_pos_y + 64, (double)character_pos_y + 65,
+					world_cache[i][0], (double)world_cache[i][0] + 64, world_cache[i][1], (double)world_cache[i][1] + 64);
+
 			bool char_collision =
-				Collision.box_Fanc(character_pos_x, (double)character_pos_x + 64, character_pos_y, (double)character_pos_y + 65,
+				Collision.box_Fanc(character_pos_x, (double)character_pos_x + 64, character_pos_y, (double)character_pos_y + 64,
 					world_cache[i][0], (double)world_cache[i][0] + 64, world_cache[i][1], (double)world_cache[i][1] + 64);
 
 			if (char_collision) {
@@ -297,11 +302,8 @@ void stage()
 				char_animation_flag[0] = true;
 				brock_collision_flag[0] = true;
 			}
-			else {
-				while (true) {
-					if (character_pos_y == 325 || char_collision || char_animation_flag[0] == true) { break; }
-					else { character_pos_y++; }
-				}
+			else if (character_pos_y < 325 && !(char_collision_adjust)) {
+				gravity_flag = true;
 			}
 
 			if (world_jump_flag[i][0] == true && world_jump_flag[i][1] == false) {
@@ -310,6 +312,18 @@ void stage()
 			}
 		}
 		#pragma endregion
+
+		if (gravity_flag == true) {
+			while (true) {
+				if (character_pos_y == 325 || char_animation_flag[0] == true) {
+					gravity_flag = false;
+					break;
+				}
+				else {
+					character_pos_y++;
+				}
+			}
+		}
 
 		#pragma region ユーザー定義ブロック判定
 		/// <summary>
